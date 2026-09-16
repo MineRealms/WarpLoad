@@ -1,7 +1,6 @@
 package com.warpload.events;
 
 import com.warpload.ModConstants;
-import com.warpload.cache.CacheMemory;
 import com.warpload.cache.GlobalCache;
 import com.warpload.config.WarpLoadConfig;
 import com.mojang.logging.LogUtils;
@@ -50,15 +49,8 @@ public class TitleScreenInjector {
                  java.lang.reflect.InvocationTargetException e) {
             LogUtils.getLogger().error("WarpLoad cannot add launch time to title screen", e);
         }
-        GlobalCache.EXECUTOR.execute(() -> {
-            try {
-                GlobalCache.persistAndTrimCaches();
-            } catch (Throwable throwable) {
-                LogUtils.getLogger().error("WarpLoad failed to persist caches", throwable);
-            }
-        });
+        GlobalCache.persistOnce();
         com.warpload.compat.LdlCtmCache.persist();
-        CacheMemory.afterHeavyLoad();
         if (WarpLoadConfig.logCacheEvents) {
             LogUtils.getLogger().info("WarpLoad: startup caches persisted and heap caches trimmed");
         }

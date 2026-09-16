@@ -42,6 +42,7 @@ public class GlobalCache {
     private static final AtomicInteger THREAD_ID = new AtomicInteger();
     private static final AtomicInteger RELOAD_THREAD_ID = new AtomicInteger();
     private static final AtomicBoolean PERSISTED_CACHE_LOAD_STARTED = new AtomicBoolean(false);
+    private static final AtomicBoolean PERSIST_ONCE_DONE = new AtomicBoolean(false);
     private static volatile CompletableFuture<Void> persistedCacheLoad = CompletableFuture.completedFuture(null);
 
     public static volatile boolean isEnabled = true;
@@ -181,6 +182,20 @@ public class GlobalCache {
             }
         }
         return null;
+    }
+
+    public static void persistOnce() {
+        if (!PERSIST_ONCE_DONE.compareAndSet(false, true)) {
+            return;
+        }
+        EXECUTOR.execute(() -> {
+            try {
+                persistAndTrimCaches();
+            } catch (Throwable throwable) {
+                LOGGER.error("WarpLoad failed to persist caches", throwable);
+            }
+        });
+        CacheMemory.afterHeavyLoad();
     }
 
     public static void persistAndTrimCaches() {
