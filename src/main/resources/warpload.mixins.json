@@ -29,6 +29,7 @@
   ],
   "client": [
     "MinecraftMainMixin",
+    "client.LdlCtmPreloadMixin",
     "debug.MoonlightGenProbeMixin",
     "misc.MaterialMixin",
     "misc.SelectorMixin",

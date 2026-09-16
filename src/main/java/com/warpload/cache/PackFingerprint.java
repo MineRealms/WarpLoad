@@ -1,5 +1,6 @@
 package com.warpload.cache;
 
+import com.warpload.config.WarpLoadConfig;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.forgespi.language.IModInfo;
 
@@ -19,7 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public final class PackFingerprint {
     private static volatile Path hashedDatapacksDir;
-    private static final String MOD_LIST_FINGERPRINT = buildModListFingerprint();
+    private static volatile String modListFingerprint;
     private static final ConcurrentHashMap<String, String> DIR_CACHE = new ConcurrentHashMap<>();
     private static volatile String datapackHash = "none";
     private static volatile String kubejsHashValue;
@@ -31,6 +32,7 @@ public final class PackFingerprint {
         DIR_CACHE.clear();
         hashedDatapacksDir = null;
         datapackHash = "none";
+        modListFingerprint = null;
     }
 
     public static String current(String directory) {
@@ -60,11 +62,11 @@ public final class PackFingerprint {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             update(digest, "gv=1");
             update(digest, "salt=" + salt);
-            update(digest, "mods=" + MOD_LIST_FINGERPRINT);
+            update(digest, "mods=" + modListFingerprint());
             update(digest, "kubejs=" + kubejsHash());
             return HexFormat.of().formatHex(digest.digest());
         } catch (NoSuchAlgorithmException e) {
-            return Integer.toHexString((salt + MOD_LIST_FINGERPRINT).hashCode());
+            return Integer.toHexString((salt + modListFingerprint()).hashCode());
         }
     }
 
@@ -73,12 +75,12 @@ public final class PackFingerprint {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             update(digest, "v=6");
             update(digest, "dir=" + directory);
-            update(digest, "mods=" + MOD_LIST_FINGERPRINT);
+            update(digest, "mods=" + modListFingerprint());
             update(digest, "datapacks=" + datapackHash());
             update(digest, "kubejs=" + kubejsHash());
             return HexFormat.of().formatHex(digest.digest());
         } catch (NoSuchAlgorithmException e) {
-            return Integer.toHexString((directory + MOD_LIST_FINGERPRINT).hashCode());
+            return Integer.toHexString((directory + modListFingerprint()).hashCode());
         }
     }
 
@@ -148,6 +150,19 @@ public final class PackFingerprint {
         return hash;
     }
 
+    private static String modListFingerprint() {
+        String cached = modListFingerprint;
+        if (cached != null) {
+            return cached;
+        }
+        synchronized (PackFingerprint.class) {
+            if (modListFingerprint == null) {
+                modListFingerprint = buildModListFingerprint();
+            }
+            return modListFingerprint;
+        }
+    }
+
     private static String buildModListFingerprint() {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
@@ -158,9 +173,36 @@ public final class PackFingerprint {
             for (IModInfo mod : mods) {
                 update(digest, mod.getModId() + "@" + mod.getVersion());
             }
+            for (String modId : WarpLoadConfig.contentHashedMods) {
+                update(digest, "jar:" + modId + "=" + hashModJar(modId));
+            }
             return HexFormat.of().formatHex(digest.digest());
         } catch (Exception e) {
             return "unknown";
+        }
+    }
+
+    private static String hashModJar(String modId) {
+        try {
+            var fileInfo = ModList.get().getModFileById(modId);
+            if (fileInfo == null) {
+                return "absent";
+            }
+            Path path = fileInfo.getFile().getFilePath();
+            if (path == null || !Files.isRegularFile(path, new LinkOption[0])) {
+                return "nofile";
+            }
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] buffer = new byte[65536];
+            try (java.io.InputStream in = Files.newInputStream(path)) {
+                int read;
+                while ((read = in.read(buffer)) != -1) {
+                    digest.update(buffer, 0, read);
+                }
+            }
+            return HexFormat.of().formatHex(digest.digest());
+        } catch (Exception e) {
+            return "err";
         }
     }
 

@@ -57,6 +57,7 @@ public class TitleScreenInjector {
                 LogUtils.getLogger().error("WarpLoad failed to persist caches", throwable);
             }
         });
+        com.warpload.compat.LdlCtmCache.persist();
         CacheMemory.afterHeavyLoad();
         if (WarpLoadConfig.logCacheEvents) {
             LogUtils.getLogger().info("WarpLoad: startup caches persisted and heap caches trimmed");

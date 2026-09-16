@@ -13,9 +13,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class WarpLoadMixinPlugin implements IMixinConfigPlugin {
     private static final String GT_MIXIN_PACKAGE = "com.warpload.mixin.gt.";
-    private static final String DEBUG_MIXIN_PACKAGE = "com.warpload.mixin.debug.";
-    private static final Map<String, String> DEBUG_MIXIN_REQUIRED_MODS = Map.of(
-            "MoonlightGenProbeMixin", "moonlight"
+    private static final Map<String, String> MOD_REQUIRED_MIXINS = Map.of(
+            "MoonlightGenProbeMixin", "moonlight",
+            "LdlCtmPreloadMixin", "ldlib"
     );
     private static final Map<String, Boolean> MOD_LOADED_CACHE = new ConcurrentHashMap<>();
 
@@ -33,12 +33,10 @@ public class WarpLoadMixinPlugin implements IMixinConfigPlugin {
         if (mixinClassName.startsWith(GT_MIXIN_PACKAGE)) {
             return isModLoaded("gtceu");
         }
-        if (mixinClassName.startsWith(DEBUG_MIXIN_PACKAGE)) {
-            String simpleName = mixinClassName.substring(mixinClassName.lastIndexOf('.') + 1);
-            String requiredMod = DEBUG_MIXIN_REQUIRED_MODS.get(simpleName);
-            if (requiredMod != null) {
-                return isModLoaded(requiredMod);
-            }
+        String simpleName = mixinClassName.substring(mixinClassName.lastIndexOf('.') + 1);
+        String requiredMod = MOD_REQUIRED_MIXINS.get(simpleName);
+        if (requiredMod != null) {
+            return isModLoaded(requiredMod);
         }
         return true;
     }

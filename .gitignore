@@ -23,3 +23,6 @@ deployed-disabled/
 # Local-only compile dependency (GTCEu jar is not redistributed)
 libs/*
 !libs/.gitkeep
+
+# Local research notes
+GTOLIB_CACHE_REFERENCE.md

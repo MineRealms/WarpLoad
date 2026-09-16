@@ -236,7 +236,8 @@ public abstract class PathResourcePackMixin implements IPathResourcePack, IPackR
     public void warpload$setModFile(IModFile modFile) {
         this.warpload$modFile = modFile;
         this.warpload$id = modFile.getModFileInfo().moduleName() + modFile.getModFileInfo().versionString()
-                + "-" + FilenameUtils.getBaseName(modFile.getFilePath().toString()).replaceAll("[^a-zA-Z0-9.-]", "");
+                + "-" + FilenameUtils.getBaseName(modFile.getFilePath().toString()).replaceAll("[^a-zA-Z0-9.-]", "")
+                + warpload$fileStamp(modFile.getFilePath());
         warpload$setExistenceByResource(GlobalCache.PERSISTED_EXISTENCES_BY_MOD.computeIfAbsent(
                 warpload$id, i -> Maps.newConcurrentMap()));
         warpload$namespacesByPackType = GlobalCache.PERSISTED_NAMESPACES_BY_MOD.computeIfAbsent(
@@ -486,6 +487,17 @@ public abstract class PathResourcePackMixin implements IPathResourcePack, IPackR
         paths[1] = location.getNamespace();
         System.arraycopy(resourceParts, 0, paths, 2, resourceParts.length);
         return paths;
+    }
+
+    @Unique
+    private static String warpload$fileStamp(Path path) {
+        try {
+            if (path != null && Files.isRegularFile(path)) {
+                return "-" + Files.size(path) + "x" + Files.getLastModifiedTime(path).toMillis();
+            }
+        } catch (Exception ignored) {
+        }
+        return "";
     }
 
     @Unique

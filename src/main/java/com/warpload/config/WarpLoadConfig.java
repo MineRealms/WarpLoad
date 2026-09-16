@@ -84,6 +84,12 @@ public final class WarpLoadConfig {
     private static final ForgeConfigSpec.BooleanValue TAG_RELOAD_CACHE_ALL = BUILDER
             .comment("Cache every tag directory instead of just the heavy defaults")
             .define("tagReloadCacheAllDirectories", false);
+    private static final ForgeConfigSpec.BooleanValue REUSE_BUILT_TAGS = BUILDER
+            .comment("Reuse already built tag collections for repeated datapack loads in the same session (world re-entry, /reload). Guarded by a fingerprint of the raw tag entries, so changed datapacks still rebuild")
+            .define("reuseBuiltTags", true);
+    private static final ForgeConfigSpec.ConfigValue<List<? extends String>> CONTENT_HASHED_MODS = BUILDER
+            .comment("Mod ids whose jar content is hashed into cache fingerprints, so a same-version repacked jar still invalidates caches. Keep this list short: jars are read once per launch")
+            .defineListAllowEmpty("contentHashedMods", List.of("gtceu"), o -> o instanceof String);
     private static final ForgeConfigSpec.ConfigValue<List<? extends String>> TAG_RELOAD_EXTRA = BUILDER
             .comment("Extra tag directories to cache")
             .defineListAllowEmpty("tagReloadExtraDirectories", List.of(), o -> o instanceof String);
@@ -158,6 +164,14 @@ public final class WarpLoadConfig {
         BUILDER.pop();
     }
 
+    private static final ForgeConfigSpec.BooleanValue LDL_CTM_CACHE = BUILDER
+            .push("client")
+            .comment("Persist LowDragLib CTM metadata (LDLMetadataSection cache) across launches. Only active when ldlib is installed; resource-pack changes are fingerprinted")
+            .define("ldlCtmCache", true);
+    static {
+        BUILDER.pop();
+    }
+
     private static final ForgeConfigSpec.BooleanValue MEMORY_CACHE_ENABLED = BUILDER
             .push("memory")
             .comment("Keep soft in-memory copies of parsed JSON/tag data for faster reloads. Soft refs are dropped under memory pressure")
@@ -195,6 +209,8 @@ public final class WarpLoadConfig {
     public static boolean tagReloadCacheEnabled = true;
     public static boolean tagReloadCacheAllDirectories = false;
     public static Set<String> tagReloadExtraDirectories = new HashSet<>();
+    public static boolean reuseBuiltTags = true;
+    public static Set<String> contentHashedMods = Set.of("gtceu");
     public static boolean modelBakeCacheEnabled = false;
     public static int modelBakeMaxModels = 20000;
     public static double aiActivationRadius = 10.0d;
@@ -209,6 +225,7 @@ public final class WarpLoadConfig {
     public static boolean gtRecipeDataCache = true;
     public static boolean debugReloadTimeline = true;
     public static boolean debugMoonlightProbe = true;
+    public static boolean ldlCtmCache = true;
     public static boolean memoryCacheEnabled = true;
     public static int memoryCacheMaxEntries = 16;
     public static boolean clearMemoryAfterReload = true;
@@ -248,6 +265,10 @@ public final class WarpLoadConfig {
                     .map(String::valueOf)
                     .map(value -> value.toLowerCase(Locale.ROOT).replace('\\', '/'))
                     .collect(Collectors.toCollection(HashSet::new));
+            reuseBuiltTags = REUSE_BUILT_TAGS.get();
+            contentHashedMods = CONTENT_HASHED_MODS.get().stream()
+                    .map(String::valueOf)
+                    .collect(Collectors.toCollection(HashSet::new));
 
             modelBakeCacheEnabled = MODEL_BAKE_CACHE_ENABLED.get();
             modelBakeMaxModels = MODEL_BAKE_MAX_MODELS.get();
@@ -268,6 +289,7 @@ public final class WarpLoadConfig {
             debugReloadTimeline = DEBUG_RELOAD_TIMELINE.get();
             debugMoonlightProbe = DEBUG_MOONLIGHT_PROBE.get();
 
+            ldlCtmCache = LDL_CTM_CACHE.get();
             memoryCacheEnabled = MEMORY_CACHE_ENABLED.get();
             memoryCacheMaxEntries = MEMORY_CACHE_MAX_ENTRIES.get();
             clearMemoryAfterReload = CLEAR_MEMORY_AFTER_RELOAD.get();

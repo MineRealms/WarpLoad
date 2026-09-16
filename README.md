@@ -43,10 +43,13 @@ Minecraft **1.20.1 Forge** 的启动 / 资源重载加速模组，面向大型�
 | `startup.parallelJsonParsing` | true | 并行 JSON 解析 |
 | `reloadCache.jsonReloadCacheEnabled` | true | JSON 磁盘缓存 |
 | `reloadCache.tagReloadCacheEnabled` | true | Tag 磁盘缓存 |
+| `reloadCache.reuseBuiltTags` | true | 同会话复用已构建 Tag 集合（原始条目指纹门控） |
+| `reloadCache.contentHashedMods` | ["gtceu"] | 参与内容哈希的 mod（同版本换 jar 也能失效） |
 | `datapack.extractZipDatapacks` | true | 解包 zip 数据包 |
 | `modelCache.modelBakeCacheEnabled` | false | 模型烘焙缓存 |
 | `ai.aiOptimizationEnabled` | true | 生物 AI 距离门控 |
 | `integration.gtRecipeDataCache` | true | GTCEu 配方数据缓存 |
+| `client.ldlCtmCache` | true | 持久化 LowDragLib CTM 元数据缓存（仅装 ldlib 时生效） |
 | `debug.reloadTimeline` / `debug.moonlightProbe` | true | 诊断日志（可关） |
 
 ## 构建

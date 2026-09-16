@@ -16,11 +16,13 @@ import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileAttribute;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 
 public final class TagReloadCache {
@@ -33,14 +35,65 @@ public final class TagReloadCache {
             "tags/worldgen/structure", "tags/game_events", "tags/painting_variant");
     private static final ThreadLocal<Boolean> LOADED_FROM_CACHE = ThreadLocal.withInitial(() -> Boolean.FALSE);
     private static final SoftValueCache<Map<ResourceLocation, List<TagLoader.EntryWithSource>>> MEMORY = new SoftValueCache<>();
-    private static final Set<String> SERVED_THIS_SESSION = java.util.concurrent.ConcurrentHashMap.newKeySet();
-    private static final Set<String> STORED_THIS_SESSION = java.util.concurrent.ConcurrentHashMap.newKeySet();
+    private static final Set<String> SERVED_THIS_SESSION = ConcurrentHashMap.newKeySet();
+    private static final Set<String> STORED_THIS_SESSION = ConcurrentHashMap.newKeySet();
+    private static final Map<String, BuiltTags> BUILT = new ConcurrentHashMap<>();
+
+    private record BuiltTags(long fingerprint, Map<ResourceLocation, Collection<?>> map) {
+    }
 
     private TagReloadCache() {
     }
 
     public static void clearMemory() {
         MEMORY.clear();
+    }
+
+    public static void clearBuildReuse() {
+        BUILT.clear();
+    }
+
+    public static Map<ResourceLocation, Collection<?>> tryReuseBuilt(String directory,
+                                                                    Map<ResourceLocation, List<TagLoader.EntryWithSource>> raw) {
+        if (!WarpLoadConfig.reuseBuiltTags || raw == null || !shouldCache(directory)) {
+            return null;
+        }
+        BuiltTags built = BUILT.get(directory);
+        if (built == null || built.fingerprint() != builtFingerprint(raw)) {
+            return null;
+        }
+        if (WarpLoadConfig.logCacheEvents) {
+            WarpLoad.LOGGER.info("Tag build reuse HIT for '{}' ({} tags)", directory, built.map().size());
+        }
+        return built.map();
+    }
+
+    public static void storeBuilt(String directory,
+                                  Map<ResourceLocation, List<TagLoader.EntryWithSource>> raw,
+                                  Map<ResourceLocation, Collection<?>> built) {
+        if (!WarpLoadConfig.reuseBuiltTags || raw == null || built == null || !shouldCache(directory)) {
+            return;
+        }
+        BUILT.put(directory, new BuiltTags(builtFingerprint(raw), built));
+    }
+
+    private static long builtFingerprint(Map<ResourceLocation, List<TagLoader.EntryWithSource>> raw) {
+        long hash = 0L;
+        for (Map.Entry<ResourceLocation, List<TagLoader.EntryWithSource>> tag : raw.entrySet()) {
+            long tagHash = tag.getKey().hashCode();
+            List<TagLoader.EntryWithSource> entries = tag.getValue();
+            if (entries != null) {
+                for (TagLoader.EntryWithSource entry : entries) {
+                    TagEntry tagEntry = entry.entry();
+                    tagHash = tagHash * 31L + entry.source().hashCode();
+                    tagHash = tagHash * 31L + (entry.remove() ? 1L : 0L);
+                    tagHash = tagHash * 31L + tagEntry.getId().hashCode();
+                    tagHash = tagHash * 31L + (tagEntry.isTag() ? 2L : 0L) + (tagEntry.isRequired() ? 4L : 0L);
+                }
+            }
+            hash += tagHash;
+        }
+        return hash;
     }
 
     public static boolean shouldCache(String directory) {

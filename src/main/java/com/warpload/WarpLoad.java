@@ -83,8 +83,16 @@ public class WarpLoad {
     public void onServerStopping(ServerStoppingEvent event) {
         if (net.minecraftforge.fml.loading.FMLEnvironment.dist.isClient()) {
             com.warpload.client.ClientModelCacheHooks.cancelStore();
+            try {
+                net.minecraft.client.Minecraft minecraft = net.minecraft.client.Minecraft.getInstance();
+                if (minecraft != null) {
+                    minecraft.execute(com.warpload.compat.LdlCtmCache::persist);
+                }
+            } catch (Throwable ignored) {
+            }
         }
         DatapackCache.deactivate();
+        com.warpload.cache.TagReloadCache.clearBuildReuse();
         CacheMemory.clearAll();
     }
 }
