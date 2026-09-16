@@ -1,0 +1,25 @@
+# Gradle
+.gradle/
+build/
+run/
+run-data/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Local dev artifacts
+*.log
+build-*.txt
+build-log*.txt
+gt-*.txt
+javap-*.txt
+jstack-*.txt
+smoke-log*.txt
+javap/
+deployed-disabled/
+
+# Local-only compile dependency (GTCEu jar is not redistributed)
+libs/*
+!libs/.gitkeep

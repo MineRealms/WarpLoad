@@ -1,0 +1,46 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.warpload.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "refmap": "warpload.refmap.json",
+  "plugin": "com.warpload.WarpLoadMixinPlugin",
+  "mixins": [
+    "gt.GTDynamicDataPackMixin",
+    "gt.GTRecipesMixin",
+    "misc.ResourceLocationMixin",
+    "resources.AbstractPackResourcesMixin",
+    "resources.DelegatingResourcePackMixin",
+    "resources.FallbackResourceManagerMixin",
+    "resources.FallbackResourceManagerPackEntryAccessor",
+    "resources.FilePackResourcesAccessor",
+    "resources.FilePackResourcesMixin",
+    "resources.PathResourcePackMixin",
+    "resources.ResourcePackLoaderMixin",
+    "resources.SimpleReloadInstanceMixin",
+    "resources.VanillaPackResourcesMixin",
+    "resources.VanillaPathResourcePackMixin",
+    "server.FolderRepositorySourceMixin",
+    "server.MobAiMixin",
+    "server.PackMixin",
+    "server.SimpleJsonResourceReloadListenerMixin",
+    "server.TagLoaderMixin",
+    "server.WorldLoaderPackConfigMixin"
+  ],
+  "client": [
+    "MinecraftMainMixin",
+    "debug.MoonlightGenProbeMixin",
+    "misc.MaterialMixin",
+    "misc.SelectorMixin",
+    "model.BlockModelMixin",
+    "model.MultiPartMixin",
+    "model.ModelBakeryMixin",
+    "model.MultivariantMixin",
+    "renderer.EntityRenderersMixin",
+    "renderer.ForgeHooksClientMixin",
+    "resources.MinecraftReloadExecutorMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
