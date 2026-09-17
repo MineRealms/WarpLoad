@@ -46,7 +46,7 @@ public abstract class TagLoaderMixin {
         }
     }
 
-    @Inject(method = "build", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "build(Ljava/util/Map;)Ljava/util/Map;", at = @At("HEAD"), cancellable = true)
     private void warpload$reuseBuiltTags(Map<ResourceLocation, List<TagLoader.EntryWithSource>> map,
                                          CallbackInfoReturnable<Map<ResourceLocation, Collection<?>>> cir) {
         if (!GlobalCache.isEnabled) {
@@ -58,7 +58,7 @@ public abstract class TagLoaderMixin {
         }
     }
 
-    @Inject(method = "build", at = @At("RETURN"))
+    @Inject(method = "build(Ljava/util/Map;)Ljava/util/Map;", at = @At("RETURN"))
     private void warpload$storeBuiltTags(Map<ResourceLocation, List<TagLoader.EntryWithSource>> map,
                                          CallbackInfoReturnable<Map<ResourceLocation, Collection<?>>> cir) {
         if (!GlobalCache.isEnabled) {

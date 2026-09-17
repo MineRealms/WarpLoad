@@ -26,3 +26,7 @@ libs/*
 
 # Local research notes
 GTOLIB_CACHE_REFERENCE.md
+
+# Server logs & smoke test output
+run-logs/
+smoke-*.txt
